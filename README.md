@@ -1,3 +1,3 @@
 # MTUtility
 
-A description of this package.
+Contains the common utilities.
