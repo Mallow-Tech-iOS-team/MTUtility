@@ -10,10 +10,16 @@ import UIKit
 import UniformTypeIdentifiers
 
 public struct DocumentPicker: UIViewControllerRepresentable {
-    @Binding var filePath: URL?
-    @Environment(\.presentationMode) private var presentationMode
+    @Binding public var filePath: URL?
+    @Environment(\.presentationMode) var presentationMode
         
-    var types: [UTType] = [.jpeg, .png, .pdf]
+    var types: [UTType]
+    
+    public init(filePath: Binding<URL?>,
+                types: [UTType] = [.jpeg, .png, .pdf]) {
+        _filePath = filePath
+        self.types = types
+    }
     
     public func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.image])

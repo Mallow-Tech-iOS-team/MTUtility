@@ -14,10 +14,16 @@ import UIKit
 
 @available(iOS, deprecated: 16.0, message: "Use PhotosPicker instead")
 public struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
-    @Environment(\.presentationMode) private var presentationMode
+    @Binding public var selectedImage: UIImage?
+    @Environment(\.presentationMode) var presentationMode
     
-    var sourceType: UIImagePickerController.SourceType = .photoLibrary
+    public var sourceType: UIImagePickerController.SourceType
+    
+    public init(selectedImage: Binding<UIImage?>,
+                sourceType: UIImagePickerController.SourceType = .camera) {
+        _selectedImage = selectedImage
+        self.sourceType = sourceType
+    }
     
     public func makeUIViewController(context: Context) -> UIImagePickerController {
         let imagePicker = UIImagePickerController()
