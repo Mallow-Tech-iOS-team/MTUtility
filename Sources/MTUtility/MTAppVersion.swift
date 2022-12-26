@@ -286,7 +286,7 @@ struct MyView: View {
                 showPicker = true
             }
             .sheet(isPresented: $showPicker) {
-//                ImagePicker(selectedImage: $selectedImage)
+                ImagePicker(selectedImage: $selectedImage)
             }
             if let selectedImage {
                 Image(uiImage: selectedImage)

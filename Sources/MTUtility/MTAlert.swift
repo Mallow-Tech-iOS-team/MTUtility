@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension View {
-    func errorAlert<T: LocalizedError>(error: Binding<T?>,
+    public func errorAlert<T: LocalizedError>(error: Binding<T?>,
                                        buttonTitle: String = "OK") -> some View {
         let localisedError = error.wrappedValue
         if #available(iOS 15.0, *) {
