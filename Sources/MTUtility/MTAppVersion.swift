@@ -170,7 +170,7 @@ extension MTAppVersion {
     }
 }
 
-extension UIApplication {
+public extension UIApplication {
     static var appVersion: String? {
         return Bundle.main.object(forInfoDictionaryKey: kAppVersion.versionKey) as? String
     }
