@@ -9,6 +9,7 @@ import SwiftUI
 
 public enum MTPermissionError: LocalizedError {
     case camera(MTCameraManager.Error)
+    case pushNotification(MTNotificationManager.Error)
 }
 
 extension MTPermissionError {
@@ -16,6 +17,17 @@ extension MTPermissionError {
         switch self {
             case let .camera(error):
                 return error.errorDescription
+            case let .pushNotification(error):
+                return error.errorDescription
+        }
+    }
+    
+    public var recoverySuggestion: String? {
+        switch self {
+            case let .camera(error):
+                return error.recoverySuggestion
+            case let .pushNotification(error):
+                return error.recoverySuggestion
         }
     }
 }
@@ -26,7 +38,7 @@ extension View {
     /// Shows the `setting` navigation alert for updating the permissions
     /// - Parameter error: takes the localised error and display the alert from error
     /// - Returns: alert if the binding has value
-    func permissionAlert(error: Binding<Error?>) -> some View {
+    public func permissionAlert(error: Binding<LocalizedError?>) -> some View {
         let localisedError = error.wrappedValue as? MTPermissionError
         if #available(iOS 15.0, *) {
             return alert(isPresented: .constant(localisedError != nil), error: localisedError) { _ in
