@@ -38,9 +38,10 @@ public class MTAppVersion: ObservableObject {
     var URLPath: String?
     /// Subsequent alert interval time
     var alertInterval: TimeInterval = kAppVersion.defaultAlertInterval
+    var headers: [MTHeader] = []
     var alertMessage: String = ""
     
-    @Published var showAlert: VersionState = .none
+    @Published public var showAlert: VersionState = .none
     
     // MARK: - Initialisers methods
     
@@ -48,12 +49,13 @@ public class MTAppVersion: ObservableObject {
     
     /// Initialisation method with appID and app version url string
     public init(appID: String,
-         URLPath: String,
-         alertInterval: TimeInterval = kAppVersion.defaultAlertInterval) {
+                URLPath: String,
+                alertInterval: TimeInterval = kAppVersion.defaultAlertInterval,
+                headers: [MTHeader] = []) {
         MTAppVersion.shared.appID = appID
         MTAppVersion.shared.URLPath = URLPath
         MTAppVersion.shared.alertInterval = alertInterval
-        
+        MTAppVersion.shared.headers = headers
         // TODO: - Do we need to dismiss the alert if the app goes background (Check with mentor)
     }
     
@@ -74,8 +76,11 @@ public class MTAppVersion: ObservableObject {
         guard let url = getAppVersioningURL() else {
             return
         }
-        
-        let request = URLRequest(url: url)
+        print("🔸 AppVersion URL - ", url)
+        var request = URLRequest(url: url)
+        for header in getHeaders() {
+            request.setValue(header.value, forHTTPHeaderField: header.key)
+        }
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             if error == nil, let responseData = data { // Success
                 do {
@@ -89,6 +94,7 @@ public class MTAppVersion: ObservableObject {
                     let statusType = VersionState(rawValue: status) ?? .none
                     let message = version.versionStatus.message ?? ""
                     self.showAlert(for: statusType, message: message)
+                    print("🔸 AppVersion ", statusType)
                 } catch {
                     print("error trying to convert data to JSON")
                     return
@@ -118,6 +124,10 @@ public class MTAppVersion: ObservableObject {
         
         return urlComponents?.url
     }
+    
+    func getHeaders() -> [MTHeader] {
+        MTAppVersion.shared.headers
+    }
 }
 
 // MARK: - Extensions
@@ -142,14 +152,16 @@ public extension MTAppVersion {
     /// Show respective app versioning alert to the user based on the status received from the server
     internal func showAlert(for status: VersionState, message: String) {
         alertMessage = message
-        switch status {
-        case .none:
-            showAlert = .none
-        case .force:
-            showAlert = .force
-        case .normal:
-            if shouldDisplayAlert() {
-                showAlert = .normal
+        Task { @MainActor in
+            switch status {
+                case .none:
+                    showAlert = .none
+                case .force:
+                    showAlert = .force
+                case .normal:
+                    if shouldDisplayAlert() {
+                        showAlert = .normal
+                    }
             }
         }
     }
@@ -189,6 +201,16 @@ struct MTVersion: Codable {
 struct MTVersionStatus: Codable {
     let status: String?
     let message: String?
+}
+
+public struct MTHeader: Codable {
+    public let key: String
+    public let value: String
+    
+    public init(key: String, value: String) {
+        self.key = key
+        self.value = value
+    }
 }
 
 // MARK: - SwiftUI Views
