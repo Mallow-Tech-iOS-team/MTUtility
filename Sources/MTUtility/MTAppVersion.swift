@@ -220,7 +220,6 @@ public extension View {
         let message = appVersion.alertMessage
         var primaryButtonTitle: String = ""
         var secondaryButtonTitle: String = ""
-        
          switch appVersion.showAlert {
             case .none:
                 break
