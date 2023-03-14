@@ -106,18 +106,22 @@ extension View {
             if let leftButtonText = alertAction?.leftButtonText {
                 Button(leftButtonText) {
                     Task { @MainActor in
-                        await leftButtonAction()
-                        bindingAlert.wrappedValue = nil
+                        // Alert is removed immediately after the button is tapped
                         MTAlertManager.shared.removeLastActionableAlert()
+                        await leftButtonAction()
+                        // Updating the alert value only after the action is performed
+                        bindingAlert.wrappedValue = nil
                     }
                 }
             }
             if let rightButtonText = alertAction?.rightButtonText {
                 Button(rightButtonText) {
                     Task { @MainActor in
-                        await rightButtonAction()
-                        bindingAlert.wrappedValue = nil
+                        // Alert is removed immediately after the button is tapped
                         MTAlertManager.shared.removeLastActionableAlert()
+                        await rightButtonAction()
+                        // Updating the alert value only after the action is performed
+                        bindingAlert.wrappedValue = nil
                     }
                 }
             }
