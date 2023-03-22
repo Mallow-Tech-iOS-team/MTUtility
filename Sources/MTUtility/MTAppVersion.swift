@@ -25,13 +25,9 @@ public enum VersionState: String {
     case none = "none"
     case normal = "normal"
     case force = "force"
-    
-    static let allValues = [none, normal, force]
 }
 
 public class MTAppVersion: ObservableObject {
-    static let shared = MTAppVersion()
-    
     /// App's ID from the App Store
     var appID: String?
     /// The App versioning URL path as `String`
@@ -44,27 +40,22 @@ public class MTAppVersion: ObservableObject {
     @Published public var showAlert: VersionState = .none
     
     // MARK: - Initialisers methods
-    
-    init() { }
-    
     /// Initialisation method with appID and app version url string
     public init(appID: String,
                 URLPath: String,
                 alertInterval: TimeInterval = kAppVersion.defaultAlertInterval,
                 headers: [MTHeader] = []) {
-        MTAppVersion.shared.appID = appID
-        MTAppVersion.shared.URLPath = URLPath
-        MTAppVersion.shared.alertInterval = alertInterval
-        MTAppVersion.shared.headers = headers
-        // TODO: - Do we need to dismiss the alert if the app goes background (Check with mentor)
+        self.appID = appID
+        self.URLPath = URLPath
+        self.alertInterval = alertInterval
+        self.headers = headers
     }
-    
     
     // MARK: - Custom methods
     
     /// Open the App in iTunes for update
     public func openInAppStore() {
-        let appID = MTAppVersion.shared.appID ?? ""
+        let appID = appID ?? ""
         if let iTunesURL: URL = URL(string: [kAppVersion.iTunesURL, appID].joined()) {
             guard UIApplication.shared.canOpenURL(iTunesURL) else { return }
             UIApplication.shared.open(iTunesURL, options: [:], completionHandler: nil)
@@ -108,7 +99,7 @@ public class MTAppVersion: ObservableObject {
     }
     
     func getAppVersioningURL() -> URL? {
-        guard let appVersioningPath = MTAppVersion.shared.URLPath else {
+        guard let appVersioningPath = URLPath else {
             return nil
         }
         var urlComponents = URLComponents(string: appVersioningPath)
@@ -126,7 +117,7 @@ public class MTAppVersion: ObservableObject {
     }
     
     func getHeaders() -> [MTHeader] {
-        MTAppVersion.shared.headers
+        headers
     }
 }
 
@@ -287,7 +278,7 @@ public extension View {
 #warning("Move this to Readme for documentation")
 
 struct MyView: View {
-    @StateObject var appVersion = MTAppVersion()
+    @StateObject var appVersion = MTAppVersion(appID: "app_ID", URLPath: "https://www.urlpath.com")
     @State var selectedImage: UIImage? = nil
     @State var showPicker: Bool = false {
         didSet {
