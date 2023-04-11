@@ -39,6 +39,15 @@ public final class MTAlertManager {
     public func isAlreadyPresentingAlert() -> Bool {
         !(currentErrorAlerts.isEmpty && currentActionableAlerts.isEmpty)
     }
+    
+    public func isAlreadyPresenting(in alertFrom: String) -> Bool {
+        currentActionableAlerts.first?.alertFrom == alertFrom
+    }
+    
+    public func isAlreadyPresenting<T: LocalizedError & Equatable>(of errorAlert: T?) -> Bool {
+        guard let firstCurrentErrorAlerts = currentErrorAlerts.first, let errorAlert else { return false }
+        return type(of: errorAlert.self) == type(of: firstCurrentErrorAlerts.self)
+    }
 }
 
 // MARK: - Protocol
@@ -76,16 +85,19 @@ public struct MTAlert: @unchecked Sendable, Equatable {
     public let message: LocalizedStringKey?
     public let leftButtonText: LocalizedStringKey?
     public let rightButtonText: LocalizedStringKey?
+    public let alertFrom: String
     
     // MARK: - Initialiser
     public init(title: LocalizedStringKey?,
                 message: LocalizedStringKey?,
                 leftButtonText: LocalizedStringKey?,
-                rightButtonText: LocalizedStringKey?) {
+                rightButtonText: LocalizedStringKey?,
+                alertFrom: String = #fileID) {
         self.title = title
         self.message = message
         self.leftButtonText = leftButtonText
         self.rightButtonText = rightButtonText
+        self.alertFrom = alertFrom
     }
 }
 
@@ -137,6 +149,8 @@ extension View {
             let isAlreadyPresenting = MTAlertManager.shared.isAlreadyPresentingAlert()
             switch isAlreadyPresenting {
             case true:
+                // When alert type of same binding variable is updated instead of nil, Fallback
+                guard !MTAlertManager.shared.isAlreadyPresenting(in: alertAction?.alertFrom ?? "") else { return }
                 // If some other alert is presenting already, cancel the current alert and update its state
                 if alertAction != nil {
                     bindingAlert.wrappedValue = nil
@@ -173,6 +187,8 @@ extension View {
                 let isAlreadyPresenting = MTAlertManager.shared.isAlreadyPresentingAlert()
                 switch isAlreadyPresenting {
                 case true:
+                    // When error alert type of same binding variable is updated instead of nil, Fallback
+                    guard !MTAlertManager.shared.isAlreadyPresenting(of: localisedError) else { return }
                     // If some other alert is presenting already, cancel the current alert and update its state
                     if localisedError != nil {
                         error.wrappedValue = nil
