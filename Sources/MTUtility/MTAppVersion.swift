@@ -119,6 +119,10 @@ public class MTAppVersion: ObservableObject {
         // TODO: - Check with mentor / backend team if device model is needed
         urlComponents?.queryItems = [appVersion, platform, osVersion]
         
+        if let appType {
+            urlComponents?.queryItems?.append(URLQueryItem(name: "app_type", value: appType))
+        }
+        
         return urlComponents?.url
     }
     
