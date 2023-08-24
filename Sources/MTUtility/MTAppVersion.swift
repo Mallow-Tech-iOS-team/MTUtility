@@ -36,16 +36,19 @@ public class MTAppVersion: ObservableObject {
     var alertInterval: TimeInterval = kAppVersion.defaultAlertInterval
     var headers: [MTHeader] = []
     var alertMessage: String = ""
+    var appType: String?
     
     @Published public var showAlert: VersionState = .none
     
     // MARK: - Initialisers methods
     /// Initialisation method with appID and app version url string
     public init(appID: String,
+                appType: String? = nil,
                 URLPath: String,
                 alertInterval: TimeInterval = kAppVersion.defaultAlertInterval,
                 headers: [MTHeader] = []) {
         self.appID = appID
+        self.appType = appType
         self.URLPath = URLPath
         self.alertInterval = alertInterval
         self.headers = headers
@@ -109,6 +112,9 @@ public class MTAppVersion: ObservableObject {
         let appVersion = URLQueryItem(name: "app_version", value: appVersionNumber)
         let platform = URLQueryItem(name: "platform", value: kAppVersion.OSType)
         let osVersion = URLQueryItem(name: "os_version", value: kAppVersion.OSVersion)
+        if let appType {
+            urlComponents?.queryItems?.append(URLQueryItem(name: "app_type", value: appType))
+        }
         
         // TODO: - Check with mentor / backend team if device model is needed
         urlComponents?.queryItems = [appVersion, platform, osVersion]
