@@ -207,6 +207,7 @@ public struct MTHeader: Codable {
 // MARK: - SwiftUI Views
 
 public extension View {
+    @MainActor
     func appVersionAlert(with appVersion: MTAppVersion) -> some View {
         let message = appVersion.alertMessage
         var primaryButtonTitle: String = ""
