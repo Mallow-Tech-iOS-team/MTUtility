@@ -20,20 +20,8 @@ public final class MTAlertManager {
         currentErrorAlerts.append(error)
     }
     
-    public func removeLastErrorAlert() {
-        if !currentErrorAlerts.isEmpty {
-            currentErrorAlerts.removeFirst()
-        }
-    }
-    
     public func appendActionableAlerts(actionableAlert: MTAlert) {
         currentActionableAlerts.append(actionableAlert)
-    }
-    
-    public func removeLastActionableAlert() {
-        if !currentActionableAlerts.isEmpty {
-            currentActionableAlerts.removeFirst()
-        }
     }
     
     public func isAlreadyPresentingAlert() -> Bool {
@@ -47,6 +35,11 @@ public final class MTAlertManager {
     public func isAlreadyPresenting<T: LocalizedError & Equatable>(of errorAlert: T?) -> Bool {
         guard let firstCurrentErrorAlerts = currentErrorAlerts.first, let errorAlert else { return false }
         return type(of: errorAlert.self) == type(of: firstCurrentErrorAlerts.self)
+    }
+    
+    public func resetAlerts() {
+        currentErrorAlerts = []
+        currentActionableAlerts = []
     }
 }
 
@@ -119,7 +112,7 @@ extension View {
                 Button(leftButtonText) {
                     Task { @MainActor in
                         // Alert is removed immediately after the button is tapped
-                        MTAlertManager.shared.removeLastActionableAlert()
+                        MTAlertManager.shared.resetAlerts()
                         await leftButtonAction()
                         // Updating the alert value only after the action is performed
                         bindingAlert.wrappedValue = nil
@@ -130,7 +123,7 @@ extension View {
                 Button(rightButtonText) {
                     Task { @MainActor in
                         // Alert is removed immediately after the button is tapped
-                        MTAlertManager.shared.removeLastActionableAlert()
+                        MTAlertManager.shared.resetAlerts()
                         await rightButtonAction()
                         // Updating the alert value only after the action is performed
                         bindingAlert.wrappedValue = nil
@@ -170,10 +163,13 @@ extension View {
                                                           buttonTitle: String = "OK") -> some View {
         let localisedError = error.wrappedValue
         if #available(iOS 15.0, *) {
-            return alert(isPresented: .constant(localisedError != nil), error: localisedError) { _ in
+            return alert(
+                isPresented: .constant(localisedError != nil),
+                error: localisedError
+            ) { _ in
                 Button(buttonTitle) {
+                    MTAlertManager.shared.resetAlerts()
                     error.wrappedValue = nil
-                    MTAlertManager.shared.removeLastErrorAlert()
                 }
             } message: { error in
                 Text(error.recoverySuggestion ?? "")
