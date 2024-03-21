@@ -168,8 +168,8 @@ extension View {
                 error: localisedError
             ) { _ in
                 Button(buttonTitle) {
-                    MTAlertManager.shared.resetAlerts()
                     error.wrappedValue = nil
+                    MTAlertManager.shared.resetAlerts()
                 }
             } message: { error in
                 Text(error.recoverySuggestion ?? "")
