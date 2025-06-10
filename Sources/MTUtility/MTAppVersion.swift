@@ -225,7 +225,7 @@ public extension View {
         buttonFont: Font? = nil,
         buttonColor: Color? = nil
     ) -> some View {
-        let showCustom = (textFont != nil && textColor != nil && buttonFont != nil && buttonColor != nil) && appVersion.showAlert == .none
+        let showCustom = (textFont != nil && textColor != nil && buttonFont != nil && buttonColor != nil) && appVersion.showAlert  != .none
         let primaryButtonTitle = "Update"
         let secondaryButtonTitle = appVersion.showAlert == .normal ? "Later" : nil
 
@@ -234,7 +234,7 @@ public extension View {
             if showCustom {
                 MTCustomAlertView(
                     title: "",
-                    message:  "Your app is out of date. Please update to continue using the app.",
+                    message: appVersion.alertMessage,
                     primaryButtonTitle: primaryButtonTitle,
                     secondaryButtonTitle: secondaryButtonTitle,
                     onPrimary: {
