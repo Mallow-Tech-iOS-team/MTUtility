@@ -223,3 +223,62 @@ extension View {
         }
     }
 }
+public struct MTCustomAlertView: View {
+    let title: String
+    let message: String
+    let primaryButtonTitle: String
+    let secondaryButtonTitle: String?
+    let onPrimary: () -> Void
+    let onSecondary: (() -> Void)?
+    let textFont: Font
+    let textColor: Color
+    let buttonFont: Font
+    let buttonColor: Color
+
+    public var body: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+            VStack(spacing: 16) {
+                if !title.isEmpty {
+                    Text(title)
+                        .font(textFont.weight(.semibold))
+                        .foregroundColor(textColor)
+                        .multilineTextAlignment(.center)
+                }
+                Text(message)
+                    .font(textFont)
+                    .foregroundColor(textColor)
+                    .multilineTextAlignment(.center)
+                Divider()
+                HStack {
+                    if let secondary = secondaryButtonTitle, let onSecondary = onSecondary {
+                        Button(action: {
+                            onSecondary()
+                        }) {
+                            Text(secondary)
+                                .font(buttonFont)
+                                .foregroundColor(buttonColor)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    
+                    Button(action: {
+                        onPrimary()
+                    }) {
+                        Text(primaryButtonTitle)
+                            .font(buttonFont.weight(.semibold))
+                            .foregroundColor(buttonColor)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(14)
+            .shadow(radius: 20)
+            .frame(maxWidth: 300)
+        }
+    }
+}

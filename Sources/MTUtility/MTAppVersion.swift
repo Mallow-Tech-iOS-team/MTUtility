@@ -1,6 +1,6 @@
 //
 //  MTAppVersion.swift
-//  
+//
 //
 //  Created by Dhanushkumar Kanagaraj on 03/10/22.
 //
@@ -218,119 +218,134 @@ public struct MTHeader: Codable {
 
 public extension View {
     @MainActor
-    func appVersionAlert(with appVersion: MTAppVersion) -> some View {
-        let message = appVersion.alertMessage
-        var primaryButtonTitle: String = ""
-        var secondaryButtonTitle: String = ""
-         switch appVersion.showAlert {
-            case .none:
-                break
-            case .normal:
-                primaryButtonTitle = "Update"
-                secondaryButtonTitle = "Later"
-            case .force:
-                primaryButtonTitle = "Update"
-        }
-        
-        if #available(iOS 15.0, *) {
-            return alert(Text(""),
-                         isPresented: .constant(appVersion.showAlert != .none)) {
-                switch appVersion.showAlert {
-                case .none:
-                    EmptyView() // Alert won't be presented in None
-                case .normal:
-                    Button(secondaryButtonTitle) {
+    func appVersionAlert(
+        with appVersion: MTAppVersion,
+        textFont: Font? = nil,
+        textColor: Color? = nil,
+        buttonFont: Font? = nil,
+        buttonColor: Color? = nil
+    ) -> some View {
+        let showCustom = (textFont != nil && textColor != nil && buttonFont != nil && buttonColor != nil) && appVersion.showAlert == .none
+        let primaryButtonTitle = "Update"
+        let secondaryButtonTitle = appVersion.showAlert == .normal ? "Later" : nil
+
+        return ZStack {
+            self
+            if showCustom {
+                MTCustomAlertView(
+                    title: "",
+                    message:  "Your app is out of date. Please update to continue using the app.",
+                    primaryButtonTitle: primaryButtonTitle,
+                    secondaryButtonTitle: secondaryButtonTitle,
+                    onPrimary: {
+                        appVersion.openInAppStore()
+                        appVersion.showAlert = .none
+                    },
+                    onSecondary: secondaryButtonTitle != nil ? {
                         appVersion.updateDisplayedAlertTime()
                         appVersion.showAlert = .none
-                    }
-                    Button(primaryButtonTitle) {
-                        appVersion.openInAppStore()
-                        appVersion.showAlert = .none
-                    }
-                case .force:
-                    Button(primaryButtonTitle) {
-                        appVersion.openInAppStore()
-                        appVersion.showAlert = .none
-                    }
-                }
-            } message: {
-                Text(message)
-            }
-        } else {
-            return alert(isPresented: .constant(appVersion.showAlert != .none)) {
-                switch appVersion.showAlert {
-                    case .none:
-                        return Alert(title: Text("")) // Alert won't be presented in None
-                    case .normal:
-                        return Alert(title: Text(""),
-                              message: Text(message),
-                              primaryButton: .default(Text(primaryButtonTitle), action: {
-                            appVersion.openInAppStore()
-                            appVersion.showAlert = .none
-                        }),
-                              secondaryButton: .default(Text(secondaryButtonTitle), action: {
-                            appVersion.updateDisplayedAlertTime()
-                            appVersion.showAlert = .none
-                        }))
-                    case .force:
-                        return Alert(title: Text(""),
-                              message: Text(message),
-                              dismissButton: .default(Text(primaryButtonTitle), action: {
-                            appVersion.openInAppStore()
-                            appVersion.showAlert = .none
-                        }))
-                }
+                    } : nil,
+                    textFont: textFont ?? .body,
+                    textColor: textColor ?? .primary,
+                    buttonFont: buttonFont ?? .body,
+                    buttonColor: buttonColor ?? .blue
+                )
             }
         }
-
+        .modifier(SystemAlertModifier(
+            appVersion: appVersion,
+            showSystemAlert: !showCustom
+        ))
     }
 }
 
-#warning("Move this to Readme for documentation")
+// Helper modifier to conditionally show the system alert
+private struct SystemAlertModifier: ViewModifier {
+    @ObservedObject var appVersion: MTAppVersion
+    let showSystemAlert: Bool
 
-struct MyView: View {
-    @StateObject var appVersion = MTAppVersion(appID: "app_ID", URLPath: "https://www.urlpath.com")
-    @State var selectedImage: UIImage? = nil
-    @State var showPicker: Bool = false {
-        didSet {
-            list.append("Hola - \(showPicker)")
-        }
+    func body(content: Content) -> some View {
+        content
+            .background(
+                Group {
+                    if showSystemAlert {
+                        SystemAlertView(appVersion: appVersion)
+                    }
+                }
+            )
     }
-    @State var list: [String] = []
-    @Environment(\.scenePhase) var scenePhase
+}
+
+// Extracted system alert logic as a helper view
+private struct SystemAlertView: View {
+    @ObservedObject var appVersion: MTAppVersion
 
     var body: some View {
-        VStack{
-            Text("Dummy Text")
-            List(list, id: \.self) { val in
-                Text(val)
-            }
-            Button("Image Picker") {
-                showPicker = true
-            }
-            .sheet(isPresented: $showPicker) {
-                ImagePicker(selectedImage: $selectedImage)
-            }
-            if let selectedImage {
-                Image(uiImage: selectedImage)
-                    .resizable()
-            }
+        let message = appVersion.alertMessage
+        var primaryButtonTitle = ""
+        var secondaryButtonTitle = ""
+        switch appVersion.showAlert {
+        case .none: break
+        case .normal:
+            primaryButtonTitle = "Update"
+            secondaryButtonTitle = "Later"
+        case .force:
+            primaryButtonTitle = "Update"
         }
-        .appVersionAlert(with: appVersion)
-        .onChange(of: scenePhase) { scenePhase in
-            switch scenePhase {
-                case .active:
-                    // Check the app versioning when app becomes ACTIVE
-                    appVersion.checkAppVersioning()
-                default:
-                    break
-            }
-        }
-    }
-}
 
-struct MyView_Previews: PreviewProvider {
-    static var previews: some View {
-        MyView()
+        return Group {
+            if #available(iOS 15.0, *) {
+                EmptyView()
+                    .alert(Text(""),
+                           isPresented: .constant(appVersion.showAlert != .none)) {
+                        switch appVersion.showAlert {
+                        case .none:
+                            EmptyView()
+                        case .normal:
+                            Button(secondaryButtonTitle) {
+                                appVersion.updateDisplayedAlertTime()
+                                appVersion.showAlert = .none
+                            }
+                            Button(primaryButtonTitle) {
+                                appVersion.openInAppStore()
+                                appVersion.showAlert = .none
+                            }
+                        case .force:
+                            Button(primaryButtonTitle) {
+                                appVersion.openInAppStore()
+                                appVersion.showAlert = .none
+                            }
+                        }
+                    } message: {
+                        Text(message)
+                    }
+            } else {
+                EmptyView()
+                    .alert(isPresented: .constant(appVersion.showAlert != .none)) {
+                        switch appVersion.showAlert {
+                        case .none:
+                            return Alert(title: Text(""))
+                        case .normal:
+                            return Alert(title: Text(""),
+                                         message: Text(message),
+                                         primaryButton: .default(Text(primaryButtonTitle), action: {
+                                appVersion.openInAppStore()
+                                appVersion.showAlert = .none
+                            }),
+                                         secondaryButton: .default(Text(secondaryButtonTitle), action: {
+                                appVersion.updateDisplayedAlertTime()
+                                appVersion.showAlert = .none
+                            }))
+                        case .force:
+                            return Alert(title: Text(""),
+                                         message: Text(message),
+                                         dismissButton: .default(Text(primaryButtonTitle), action: {
+                                appVersion.openInAppStore()
+                                appVersion.showAlert = .none
+                            }))
+                        }
+                    }
+            }
+        }
     }
 }
